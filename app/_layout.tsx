@@ -1,24 +1,37 @@
-import { Stack } from "expo-router";
+import { AuthProvider, useAuth } from "@/lib/auth-context";
+import { Stack, useRouter, useSegments } from "expo-router";
+import React, { useEffect } from "react";
+import Toast from "react-native-toast-message";
 
-function useAuth() {
-  const isAuth = false;
-  return { isAuth };
+//route auth guard
+function RouteGuard({ children }: { children: React.ReactNode }) {
+  const { user, isFetchingSession } = useAuth();
+  const router = useRouter();
+  const segments = useSegments();
+  const onAuthScreen = segments[0] === "auth";
+
+  useEffect(() => {
+    if (!user && !onAuthScreen && !isFetchingSession) {
+      router.replace("/auth");
+    } else if (user && onAuthScreen && !isFetchingSession) {
+      router.replace("/");
+    }
+  }, [user, segments]);
+
+  return <>{children}</>;
 }
 
 export default function RootLayout() {
-  const { isAuth } = useAuth();
-
   return (
-    <Stack>
-      {/*Auth routes allowed only when NOT logged in */}
-      <Stack.Protected guard={!isAuth}>
-        <Stack.Screen name="auth" options={{ title: "Auth" }} />
-      </Stack.Protected>
+    <AuthProvider>
+      <RouteGuard>
+        <Stack>
+          <Stack.Screen name="auth" options={{ title: "Auth" }} />
 
-      {/*App routes allowed only when logged in */}
-      <Stack.Protected guard={isAuth}>
-        <Stack.Screen name="(tabs)" />
-      </Stack.Protected>
-    </Stack>
+          <Stack.Screen name="(tabs)" />
+        </Stack>
+        <Toast />
+      </RouteGuard>{" "}
+    </AuthProvider>
   );
 }
