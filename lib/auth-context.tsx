@@ -67,15 +67,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   //appwrite signOut
-  const signOut = async () => {
-    try {
-      await account.deleteSession("current");
-      setUser(null);
-    } catch (error) {
-      console.log(error);
+const signOut = async () => {
+  try {
+    await account.deleteSession("current");
+  } catch (error: any) {
+    console.log("errorerror",error)
+    if (!error.message?.includes("missing scopes")) {
+      console.error(error);
     }
-  };
-
+  } finally {
+    setUser(null);
+  }
+};
   return (
     <AuthContext.Provider
       value={{ user, signIn, signUp, signOut, isFetchingSession }}
