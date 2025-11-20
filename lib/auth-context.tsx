@@ -42,7 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await account.create(ID.unique(), email, password);
       await signIn(email, password);
-      
+
       return null;
     } catch (error) {
       if (error instanceof Error) {
@@ -56,7 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signIn = async (email: string, password: string) => {
     try {
       await account.createEmailPasswordSession(email, password);
-       await getUserSession();
+      await getUserSession();
       return null;
     } catch (error) {
       if (error instanceof Error) {
@@ -67,18 +67,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   //appwrite signOut
-const signOut = async () => {
-  try {
-    await account.deleteSession("current");
-  } catch (error: any) {
-    console.log("errorerror",error)
-    if (!error.message?.includes("missing scopes")) {
-      console.error(error);
+  const signOut = async () => {
+    try {
+      await account.deleteSession("current");
+    } catch (error: any) {
+      setUser(null);
+      if (!error.message?.includes("missing scopes")) {
+        console.error(error);
+      }
+    } finally {
+      setUser(null);
     }
-  } finally {
-    setUser(null);
-  }
-};
+  };
   return (
     <AuthContext.Provider
       value={{ user, signIn, signUp, signOut, isFetchingSession }}

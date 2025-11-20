@@ -1,4 +1,4 @@
-import { useState,useEffect } from "react";
+import { useState, useEffect } from "react";
 import { KeyboardAvoidingView, Platform, View, StyleSheet } from "react-native";
 import { Button, Text, TextInput } from "react-native-paper";
 import * as yup from "yup";
@@ -47,24 +47,23 @@ export default function AuthScreen() {
     reValidateMode: "onChange",
   });
 
- const onSubmit = async (data: LoginForm) => {
-  if (isSignUp) {
-    const error = await signUp(data.email, data.password);
-    if (error) return handleError(error);
-    return handleNavigation();
-  }
+  const onSubmit = async (data: LoginForm) => {
+    if (isSignUp) {
+      const error = await signUp(data.email, data.password);
+      if (error) return handleError(error);
+      return handleNavigation();
+    }
 
-  const error = await signIn(data.email, data.password);
-  if (error) {
-    setError("password", { type: "manual", message: error });
-    return;
-  }
+    const error = await signIn(data.email, data.password);
+    if (error) {
+      setError("password", { type: "manual", message: error });
+      return;
+    }
 
-  handleNavigation();
-};
+    handleNavigation();
+  };
 
   const handleError = (error: string) => {
-    console.log("sasaasasa", error);
     setError("password", {
       type: "manual",
       message: error,
@@ -82,8 +81,7 @@ export default function AuthScreen() {
   console.log("Form Data:", errors);
 
   //to re-render component while setting a manual error
-useEffect(() => {
-}, [errors]);
+  useEffect(() => {}, [errors]);
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -121,6 +119,7 @@ useEffect(() => {
               secureTextEntry
               label={"Password"}
               mode="outlined"
+              textColor="black"  
               style={styles.input}
               onChangeText={onChange}
               value={value}
@@ -166,6 +165,7 @@ const styles = StyleSheet.create({
   title: {
     margin: 24,
     textAlign: "center",
+    color: "black",
   },
   input: {
     marginBottom: 12,
