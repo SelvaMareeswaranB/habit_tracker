@@ -8,5 +8,10 @@ export const client = new Client()
 export const account = new Account(client);
 export const databases = new Databases(client);
 
-export const DATABASE_ID = process.env.EXPO_PUBLIC_DB_PUBLIC!
-export const HABITS_TABLE_NAME = process.env.EXPO_PUBLIC_HABITS_TABLE!
+export const DATABASE_ID = process.env.EXPO_PUBLIC_DB_PUBLIC!;
+export const HABITS_TABLE = process.env.EXPO_PUBLIC_HABITS_TABLE_NAME!;
+
+export interface RealTimeResponse {
+  events: string[];
+  payload: any;
+}

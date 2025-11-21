@@ -3,9 +3,9 @@ import { TextInput, SegmentedButtons, Button, Text } from "react-native-paper";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useForm, Controller } from "react-hook-form";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { DATABASE_ID, databases, HABITS_TABLE_NAME } from "@/lib/appwrite";
+import { DATABASE_ID, databases, HABITS_TABLE } from "@/lib/appwrite";
 import { ID } from "react-native-appwrite";
 import { useRouter } from "expo-router";
 const FREQUENCIES = ["daily", "weekly", "monthly"] as const;
@@ -52,7 +52,9 @@ export default function SignInScreen() {
     resolver: yupResolver(schema),
     reValidateMode: "onChange",
   });
-  const [title, description] = watch(["title", "description"]);
+
+  const [titleValue, descriptionValue] = watch(["title", "description"]);
+
   const [apiError, setApiError] = useState("");
   const { user } = useAuth();
   const router = useRouter();
@@ -62,7 +64,7 @@ export default function SignInScreen() {
     try {
       await databases.createDocument({
         databaseId: DATABASE_ID,
-        collectionId: HABITS_TABLE_NAME,
+        collectionId: HABITS_TABLE,
         documentId: ID.unique(),
         data: {
           title: data.title,
@@ -135,7 +137,7 @@ export default function SignInScreen() {
       </View>
       <Button
         mode="contained"
-        disabled={!title || !description}
+        disabled={!titleValue ||!descriptionValue}
         onPress={handleSubmit(onSubmit)}
       >
         Add Habit
@@ -170,6 +172,4 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     fontSize: 12,
   },
-  
-  
 });
