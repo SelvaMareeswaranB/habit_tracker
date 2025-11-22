@@ -4,7 +4,7 @@ import React, { useEffect } from "react";
 import { PaperProvider, MD3LightTheme } from "react-native-paper";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 const theme = {
   ...MD3LightTheme,
   components: {
@@ -48,19 +48,25 @@ export default function RootLayout() {
   const queryClient = new QueryClient();
 
   return (
-    <AuthProvider>
-      <QueryClientProvider client={queryClient}>
-        <SafeAreaProvider>
-          <PaperProvider theme={theme}>
-            <RouteGuard>
-              <Stack>
-                <Stack.Screen name="auth" options={{ headerShown: false }} />
-                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              </Stack>
-            </RouteGuard>{" "}
-          </PaperProvider>
-        </SafeAreaProvider>
-      </QueryClientProvider>
-    </AuthProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      {" "}
+      <AuthProvider>
+        <QueryClientProvider client={queryClient}>
+          <SafeAreaProvider>
+            <PaperProvider theme={theme}>
+              <RouteGuard>
+                <Stack>
+                  <Stack.Screen name="auth" options={{ headerShown: false }} />
+                  <Stack.Screen
+                    name="(tabs)"
+                    options={{ headerShown: false }}
+                  />
+                </Stack>
+              </RouteGuard>{" "}
+            </PaperProvider>
+          </SafeAreaProvider>
+        </QueryClientProvider>
+      </AuthProvider>
+    </GestureHandlerRootView>
   );
 }
