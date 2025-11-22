@@ -1,59 +1,15 @@
-import {
-  client,
-  DATABASE_ID,
-  databases,
-  HABITS_TABLE,
-  RealTimeResponse,
-} from "@/lib/appwrite";
+import { useHabits } from "@/hooks/useFetchHabits";
 import { useAuth } from "@/lib/auth-context";
-import { Habit } from "@/types/database.type";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useEffect, useState } from "react";
-import { View, StyleSheet } from "react-native";
-import { Query } from "react-native-appwrite";
+import { View, StyleSheet, ScrollView } from "react-native";
 import { Button, Surface, Text } from "react-native-paper";
 
 export default function LogInScreen() {
   const { signOut, user } = useAuth();
-  const [habits, setHabits] = useState<Habit[]>();
 
-  useEffect(() => {
-    if (!user) return;
+  const userId = user?.$id;
+  const { data: habits, isLoading, error } = useHabits(userId);
 
-    fetchHabits();
-
-    const channel = `databases.${DATABASE_ID}.collections.${HABITS_TABLE}.documents`;
-
-    const habitSubscription = client.subscribe(channel, (response) => {
-      console.log("Realtime Event:", response.events);
-
-      if (response.events.some((e) => e.includes("create"))) {
-        fetchHabits();
-      } else if (response.events.some((e) => e.includes("update"))) {
-        fetchHabits();
-      } else if (response.events.some((e) => e.includes("delete"))) {
-        fetchHabits();
-      }
-    });
-
-    return () => {
-      habitSubscription();
-    };
-  }, [user]);
-
-  console.log("asasasa", user?.$id, DATABASE_ID);
-  const fetchHabits = async () => {
-    const userId = user?.$id;
-    try {
-      const habits = await databases.listDocuments(DATABASE_ID, HABITS_TABLE, [
-        Query.equal("user_id", userId ?? ""),
-      ]);
-      console.log("hasasa", habits);
-      setHabits(habits?.documents);
-    } catch (error) {
-      console.log(error);
-    }
-  };
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -65,40 +21,42 @@ export default function LogInScreen() {
           Sign Out
         </Button>
       </View>
-      {habits?.length === 0 ? (
-        <View style={styles.emptyState}>
-          <Text style={styles.emptyStateText}>
-            No Habits yet. Add your first Habit!
-          </Text>
-        </View>
-      ) : (
-        habits?.map((habit, key) => (
-          <Surface elevation={0} style={styles.card} key={`${key}-card`}>
-            <View key={key} style={styles.cardContent}>
-              <Text style={styles.cardTitle}>{habit?.title}</Text>
-              <Text style={styles.cardDescription}>{habit?.description}</Text>
-              <View style={styles.cardFooter}>
-                <View style={styles.streakBadge}>
-                  <MaterialCommunityIcons
-                    name="fire"
-                    size={18}
-                    color={"#ff9800"}
-                  />
-                  <Text style={styles.streakText}>
-                    {habit?.streak_count} day streak
-                  </Text>
-                </View>
-                <View style={styles.frequencyBadge}>
-                  <Text style={styles.frequencyText}>
-                    {habit?.frequency?.charAt(0)?.toUpperCase() +
-                      habit?.frequency?.slice(1)}
-                  </Text>
+      <ScrollView>
+        {habits?.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyStateText}>
+              No Habits yet. Add your first Habit!
+            </Text>
+          </View>
+        ) : (
+          habits?.map((habit, key) => (
+            <Surface elevation={0} style={styles.card} key={`${key}-card`}>
+              <View key={key} style={styles.cardContent}>
+                <Text style={styles.cardTitle}>{habit?.title}</Text>
+                <Text style={styles.cardDescription}>{habit?.description}</Text>
+                <View style={styles.cardFooter}>
+                  <View style={styles.streakBadge}>
+                    <MaterialCommunityIcons
+                      name="fire"
+                      size={18}
+                      color={"#ff9800"}
+                    />
+                    <Text style={styles.streakText}>
+                      {habit?.streak_count} day streak
+                    </Text>
+                  </View>
+                  <View style={styles.frequencyBadge}>
+                    <Text style={styles.frequencyText}>
+                      {habit?.frequency?.charAt(0)?.toUpperCase() +
+                        habit?.frequency?.slice(1)}
+                    </Text>
+                  </View>
                 </View>
               </View>
-            </View>
-          </Surface>
-        ))
-      )}
+            </Surface>
+          ))
+        )}
+      </ScrollView>
     </View>
   );
 }

@@ -8,6 +8,8 @@ import { useAuth } from "@/lib/auth-context";
 import { DATABASE_ID, databases, HABITS_TABLE } from "@/lib/appwrite";
 import { ID } from "react-native-appwrite";
 import { useRouter } from "expo-router";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+
 const FREQUENCIES = ["daily", "weekly", "monthly"] as const;
 
 //yup validation schema
@@ -35,6 +37,8 @@ export default function SignInScreen() {
     frequency: frequency;
   };
 
+  const queryClient = useQueryClient();
+
   //hook form setup
   const {
     control,
@@ -59,32 +63,43 @@ export default function SignInScreen() {
   const { user } = useAuth();
   const router = useRouter();
 
-  const onSubmit = async (data: habitForm) => {
+  const handleAddHabit = async (data: habitForm) => {
     if (!user) return;
-    try {
-      await databases.createDocument({
-        databaseId: DATABASE_ID,
-        collectionId: HABITS_TABLE,
-        documentId: ID.unique(),
-        data: {
-          title: data.title,
-          description: data.description,
-          frequency: data.frequency,
-          streak_count: 0,
-          user_id: user.$id,
-          last_completed: new Date().toISOString(),
-        },
-      });
+
+    const result = await databases.createDocument({
+      databaseId: DATABASE_ID,
+      collectionId: HABITS_TABLE,
+      documentId: ID.unique(),
+      data: {
+        title: data.title,
+        description: data.description,
+        frequency: data.frequency,
+        streak_count: 0,
+        user_id: user.$id,
+        last_completed: new Date().toISOString(),
+      },
+    });
+
+    return result;
+  };
+  const { mutateAsync } = useMutation({
+    mutationFn: handleAddHabit,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["habits"] });
 
       router.back();
-    } catch (error) {
+    },
+    onError: (error) => {
       if (error instanceof Error) {
         setApiError(error.message);
         return;
       }
 
       setApiError("There was an error while creating the habit");
-    }
+    },
+  });
+  const onSubmit = (data: habitForm) => {
+    mutateAsync(data);
   };
   return (
     <View style={styles.container}>
@@ -137,7 +152,7 @@ export default function SignInScreen() {
       </View>
       <Button
         mode="contained"
-        disabled={!titleValue ||!descriptionValue}
+        disabled={!titleValue || !descriptionValue}
         onPress={handleSubmit(onSubmit)}
       >
         Add Habit

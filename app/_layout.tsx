@@ -3,6 +3,7 @@ import { Stack, useRouter, useSegments } from "expo-router";
 import React, { useEffect } from "react";
 import { PaperProvider, MD3LightTheme } from "react-native-paper";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const theme = {
   ...MD3LightTheme,
@@ -11,9 +12,9 @@ const theme = {
       style: { backgroundColor: "white" },
       theme: {
         colors: {
-          primary: "black",          // focused label
-          onSurfaceVariant: "black", // unfocused label
-          surfaceVariant: "white",   // background
+          primary: "black",
+          onSurfaceVariant: "black",
+          surfaceVariant: "white",
         },
       },
     },
@@ -44,18 +45,22 @@ function RouteGuard({ children }: { children: React.ReactNode }) {
 
 // ------------ ROOT LAYOUT ------------
 export default function RootLayout() {
+  const queryClient = new QueryClient();
+
   return (
     <AuthProvider>
-      <SafeAreaProvider>
-        <PaperProvider theme={theme}>
-          <RouteGuard>
-            <Stack>
-              <Stack.Screen name="auth" options={{ headerShown: false }} />
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            </Stack>
-          </RouteGuard>{" "}
-        </PaperProvider>
-      </SafeAreaProvider>
+      <QueryClientProvider client={queryClient}>
+        <SafeAreaProvider>
+          <PaperProvider theme={theme}>
+            <RouteGuard>
+              <Stack>
+                <Stack.Screen name="auth" options={{ headerShown: false }} />
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              </Stack>
+            </RouteGuard>{" "}
+          </PaperProvider>
+        </SafeAreaProvider>
+      </QueryClientProvider>
     </AuthProvider>
   );
 }
