@@ -22,7 +22,7 @@ export default function LogInScreen() {
   const userId = user?.$id;
   const { data: habits = [], isLoading, error } = useHabits(userId);
   const { data: completedHabits = [], isLoading: completedHabisLoading } =
-    useCompletedHabit(userId);
+    useCompletedHabit(userId, true);
 
   const swipRef = useRef<Record<string, Swipeable | null>>({});
 
