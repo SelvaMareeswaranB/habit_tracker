@@ -35,14 +35,15 @@ Track your daily habits, build streaks, and stay consistent through a simple, be
 ## 📁 Project Structure
 
 habit_tracker/
-├─ app/ # Screens (Expo Router Navigation)
-├─ components/ # Reusable UI components
-├─ hooks/ # React Query & custom data hooks
-├─ lib/ # Appwrite client, auth, constants
-├─ scripts/ # Utility scripts (reset, environment setup)
-├─ types/ # Global shared TypeScript definitions
-├─ assets/ # Fonts, images, icons
-└─ README.md # Project documentation
+├─ app/                   # Screens (Expo Router Navigation)
+├─ components/            # Reusable UI components
+├─ hooks/                 # React Query & business logic hooks
+├─ lib/                   # Appwrite client, auth, constants
+├─ scripts/               # Utility scripts
+├─ types/                 # Shared TypeScript types
+├─ assets/                # Images, fonts, icons
+└─ README.md
+
 
 ----
 
