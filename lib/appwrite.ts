@@ -10,8 +10,5 @@ export const databases = new Databases(client);
 
 export const DATABASE_ID = process.env.EXPO_PUBLIC_DB_PUBLIC!;
 export const HABITS_TABLE = process.env.EXPO_PUBLIC_HABITS_TABLE_NAME!;
-
-export interface RealTimeResponse {
-  events: string[];
-  payload: any;
-}
+export const COMPLETTION_TABLE =
+  process.env.EXPO_PUBLIC_HABITS_COMPLETION_TABLE!;

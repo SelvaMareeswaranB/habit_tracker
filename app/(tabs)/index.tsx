@@ -1,11 +1,18 @@
 import { useHabits } from "@/hooks/useFetchHabits";
-import { DATABASE_ID, databases, HABITS_TABLE } from "@/lib/appwrite";
+import { useCompletedHabit } from "@/hooks/useFetchCompletedHabit";
+import {
+  COMPLETTION_TABLE,
+  DATABASE_ID,
+  databases,
+  HABITS_TABLE,
+} from "@/lib/appwrite";
 import { useAuth } from "@/lib/auth-context";
 import { Habit } from "@/types/database.type";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRef } from "react";
-import { LayoutAnimation, ScrollView, StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
+import { ID } from "react-native-appwrite";
 import { Swipeable } from "react-native-gesture-handler";
 import { Button, Surface, Text } from "react-native-paper";
 
@@ -13,7 +20,10 @@ export default function LogInScreen() {
   const { signOut, user } = useAuth();
 
   const userId = user?.$id;
-  const { data: habits, isLoading, error } = useHabits(userId);
+  const { data: habits = [], isLoading, error } = useHabits(userId);
+  const { data: completedHabits = [], isLoading: completedHabisLoading } =
+    useCompletedHabit(userId);
+
   const swipRef = useRef<Record<string, Swipeable | null>>({});
 
   const renderLeftAction = () => (
@@ -26,20 +36,25 @@ export default function LogInScreen() {
     </View>
   );
 
-  const renderRightAction = () => (
+  const renderRightAction = (habitId: string) => (
     <View style={styles.swipeActionRight}>
-      <MaterialCommunityIcons
-        name="check-circle-outline"
-        size={32}
-        color={"#ffff"}
-      />
+      {isHabitCompleted(habitId) ? (
+        <Text style={{ color: "#fff" }}>Completed !</Text>
+      ) : (
+        <MaterialCommunityIcons
+          name="check-circle-outline"
+          size={32}
+          color={"#ffff"}
+        />
+      )}
     </View>
   );
-
+  //habit delete handler
   const handleHabitDelete = async (id: string) => {
     await databases.deleteDocument(DATABASE_ID, HABITS_TABLE, id);
   };
 
+  //habit delete mutation query
   const queryClient = useQueryClient();
   const { mutateAsync: deleteAsync } = useMutation<
     void,
@@ -53,8 +68,6 @@ export default function LogInScreen() {
 
       const previousHabits = queryClient.getQueryData<Habit[]>(["habits"]);
 
-      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-
       queryClient.setQueryData<Habit[]>(["habits"], (old) =>
         old?.filter((h) => h.$id !== id)
       );
@@ -65,11 +78,52 @@ export default function LogInScreen() {
     },
     onError: (_, __, context) => {
       if (!context?.previousHabits) return;
-      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
 
       queryClient.setQueryData(["habits"], context.previousHabits);
     },
   });
+
+  //handler to check completed habits
+  const isHabitCompleted = (habitId: string) =>
+    completedHabits.includes(habitId);
+
+  //habit completion handler
+  const handleHabitCompletion = async (id: string) => {
+    if (!user || isHabitCompleted(id)) return;
+    const currentDate = new Date().toISOString();
+    await databases.createDocument(
+      DATABASE_ID,
+      COMPLETTION_TABLE,
+      ID.unique(),
+      {
+        habit_id: id,
+        user_id: user.$id,
+        completed_at: currentDate,
+      }
+    );
+
+    const habit = habits?.find((h) => h.$id === id);
+    if (!habit) return;
+
+    //habit table updation logic
+    await databases.updateDocument(DATABASE_ID, HABITS_TABLE, id, {
+      streak_count: habit.streak_count + 1,
+      last_completed: currentDate,
+    });
+  };
+
+  //habit completion mutation query
+  const { mutateAsync: habitCompletionAsync } = useMutation({
+    mutationFn: handleHabitCompletion,
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["habits"] }),
+        queryClient.invalidateQueries({ queryKey: ["completedHabits"] }),
+      ]);
+    },
+    onError: () => {},
+  });
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -98,16 +152,22 @@ export default function LogInScreen() {
               overshootLeft={false}
               overshootRight={false}
               renderLeftActions={renderLeftAction}
-              renderRightActions={renderRightAction}
+              renderRightActions={() => renderRightAction(habit.$id)}
               onSwipeableOpen={(direction) => {
-                LayoutAnimation.configureNext(
-                  LayoutAnimation.Presets.easeInEaseOut
-                );
-
                 if (direction === "left") deleteAsync(habit.$id);
+                else if (direction === "right") habitCompletionAsync(habit.$id);
+
+                swipRef.current[habit.$id]?.close();
               }}
             >
-              <Surface elevation={0} style={styles.card} key={`${key}-card`}>
+              <Surface
+                elevation={0}
+                style={[
+                  styles.card,
+                  isHabitCompleted(habit.$id) && styles.cardCompleted,
+                ]}
+                key={`${key}-card`}
+              >
                 <View key={key} style={styles.cardContent}>
                   <Text style={styles.cardTitle}>{habit?.title}</Text>
                   <Text style={styles.cardDescription}>
@@ -239,5 +299,8 @@ const styles = StyleSheet.create({
     marginTop: 2,
     marginBottom: 18,
     paddingRight: 16,
+  },
+  cardCompleted: {
+    opacity: 0.6,
   },
 });

@@ -86,8 +86,8 @@ export default function SignInScreen() {
     mutationFn: handleAddHabit,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["habits"] });
-
       router.back();
+      reset()
     },
     onError: (error) => {
       if (error instanceof Error) {
